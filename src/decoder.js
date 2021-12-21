@@ -1,3 +1,15 @@
+const SDI = Buffer.from('0101000000000000005500000AB00A50037011', 'hex')
+module.exports.SDI_example_value = new DataView(SDI.buffer.slice(SDI.byteOffset, SDI.byteOffset + SDI.byteLength))
+
+const NKE = {
+  MEASUREMENT_TYPE_TEMPERATURE: 23.2,
+  MEASUREMENT_TYPE_HUMIDITY: 0.5,
+  MEASUREMENT_TYPE_CO2: 453,
+  MEASUREMENT_TYPE_NO2_GAS: 28,
+  MEASUREMENT_TYPE_NOISE_LEVEL: 12
+}
+// const NKE_example_value = new DataView(Buffer.from('0101000000000000005500000AB00A50037011', 'hex'))
+
 module.exports.decodeBuffer = (data) => {
   const type = data[0]
   const version = data[1]
