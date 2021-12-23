@@ -228,12 +228,9 @@ function getBytes(input, index, offset) {
   switch (offset) {
     case 1:
       return input.getUint8(index)
-      break
     case 2:
       return input.getUint16(index)
-      break
     case 4:
       return input.getUint32(index)
-      break
   }
 }
