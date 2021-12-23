@@ -1,11 +1,23 @@
 const axios = require('axios')
+const { exec } = require('child_process')
+const portfinder = require('portfinder')
 
-function init(script, clientId, timeout, memoryLimit) {}
+let clients = {}
 
-function decode(data) {
+function init(script, clientId, timeout, memoryLimit) {
+  portfinder.getPort((err, port) => {
+    exec(`docker run --memory="${memoryLimit}m" -p ${port}:3000  decoder "${script}"`)
+
+    clients[clientId] = {
+      port
+    }
+  })
+}
+
+function decode(input, clientId) {
   return axios({
     method: 'POST',
-    url: 'http://localhost:3000/',
+    url: 'http://localhost:' + clients[clientId].port,
     data: { payload: '0101000000000000005500000AB00A50037011' },
     headers: { 'Content-Type': 'application/json' }
   }).then((data) => data.data)

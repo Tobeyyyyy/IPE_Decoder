@@ -13,8 +13,8 @@ async function main(d) {
   const dataView = new DataView(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength))
 
   const decoder = d || argv.d
-  const timeout = argv.t
-  const memoryLimit = argv.m
+  const timeout = argv.t || 1000
+  const memoryLimit = argv.m || 300
 
   let init, decode
 
@@ -37,36 +37,35 @@ async function main(d) {
   }
 
   init(decodeStringTypedArray, 0, timeout, memoryLimit)
-  console.log(await decode(dataView, 0))
+  await new Promise((resolve) => setTimeout(resolve, 3000))
 
-  // let results = []
+  let results = []
 
-  // init(decodeStringTypedArray, 0, timeout, memoryLimit)
+  for (let i = 0; i < 100000; i++) {
+    let startTime = performance.now()
 
-  // for (let i = 0; i < 100000; i++) {
-  //   let startTime = performance.now()
+    // Decode here
 
-  //   // Decode here
+    await decode(dataView, 0)
 
-  //   decode(dataView, 0)
+    // *******
 
-  //   // *******
+    let endTime = performance.now()
 
-  //   let endTime = performance.now()
+    if (i % 1000 === 0) {
+      console.log(`${i} ${endTime - startTime}`)
+    }
+    results.push(endTime - startTime)
+  }
 
-  //   if (i % 1000 === 0) {
-  //     // console.log(`${i} ${endTime - startTime}`)
-  //   }
-  //   results.push(endTime - startTime)
-  // }
-
-  // console.log(decoder, boxValues(results))
+  console.log(decoder, boxValues(results))
 }
 
-main()
+// main()
 
 // main('static')
 // main('common')
 // main('eval')
 // main('vm2')
 // main('isolatedVM')
+main('docker')
