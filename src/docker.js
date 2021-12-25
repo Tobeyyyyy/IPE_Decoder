@@ -18,7 +18,7 @@ function decode(input, clientId) {
   return axios({
     method: 'POST',
     url: 'http://localhost:' + clients[clientId].port,
-    data: { payload: '0101000000000000005500000AB00A50037011' },
+    data: { payload: input },
     headers: { 'Content-Type': 'application/json' }
   }).then((data) => data.data)
 }
