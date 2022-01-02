@@ -49,6 +49,7 @@ module.exports.boxValues = (arr) => {
     q2_5: quantile(arr, 0.025),
     q97_5: quantile(arr, 0.975),
     low: sorted[0],
-    high: sorted[sorted.length - 1]
+    high: sorted[sorted.length - 1],
+    avg: mean(arr)
   }
 }

@@ -1,28 +1,21 @@
-const fastify = require('fastify')({ logger: true })
-var argv = require('minimist')(process.argv.slice(2))
+let script
 
-console.log(argv._[0])
+process.stdin.on('readable', function () {
+  var buf = process.stdin.read()
 
-fastify.post('/', async (request, reply) => {
-  const buffer = Buffer.from(request.body.payload, 'hex')
+  if (!script) {
+    script = buf.toString('utf8')
+  } else {
+    const buffer = Buffer.from(buf.toString('utf8'), 'hex')
+    let data = new DataView(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength))
 
-  const data = new DataView(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength))
+    const result = eval(`
+      function decode(data) {
+        ${script}
+      }
+      decode(data)
+    `)
 
-  return eval(`
-    function decode(data) {
-        ${argv._[0]}
-    }
-
-    decode(data)
-  `)
-})
-
-const start = async () => {
-  try {
-    await fastify.listen(3000, '0.0.0.0')
-  } catch (err) {
-    fastify.log.error(err)
-    process.exit(1)
+    console.log(JSON.stringify(result))
   }
-}
-start()
+})

@@ -24,7 +24,7 @@ async function main(d) {
     init = () => {}
     decode = (input) => commonDecode(input, example_SDI)
     payload = dataView
-  } else if (decoder === 'static') {
+  } else if (decoder === 'nativ') {
     init = () => {}
     decode = decodeTypedArray
     payload = dataView
@@ -48,10 +48,7 @@ async function main(d) {
   }
 
   if (benchmark === 'latency') {
-    if (decoder !== 'denoVM') {
-      init(decodeStringTypedArray, 0, timeout, memoryLimit)
-      await new Promise((resolve) => setTimeout(resolve, 3000))
-
+    if (decoder !== 'denoVM' && decoder !== 'docker') {
       let results = []
 
       for (let i = 0; i < 100000; i++) {
@@ -59,7 +56,8 @@ async function main(d) {
 
         // Decode here
 
-        await decode(dataView, 0)
+        const result = await decode(payload, 0)
+        console.log(result)
 
         // *******
 
@@ -102,7 +100,7 @@ async function main(d) {
     // 1000 clients:
     //
     // isolated-vm: 7.9 % = 1264 mb      / 1000 = 1.264 mb
-    // vm2: 
+    // vm2:
     // eval: 0.7 %
     // static: 0.6 %
     //
@@ -114,8 +112,8 @@ async function main(d) {
     let clients = []
     let runs = 0
 
-    for (let i = 0; i < 2; i++) {
-      init(decodeStringTypedArray, i, timeout, memoryLimit)
+    for (let i = 0; i < 1; i++) {
+      init(decodeStringTypedArray, i, timeout, memoryLimit, () => {})
       clients.push(i)
     }
     await new Promise((resolve) => setTimeout(resolve, 3000))
@@ -127,9 +125,54 @@ async function main(d) {
 
       await new Promise((resolve) => setTimeout(resolve, 100))
 
-      if (runs % 1000) {
-        console.log(runs)
+      console.log(runs)
+    }
+  } else if (benchmark === 'throughput') {
+    if (decoder !== 'denoVM' && decoder !== 'docker') {
+      init(decodeStringTypedArray, 0, timeout, memoryLimit)
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+
+      let startTime = Date.now()
+      let counter = 0
+
+      // konfig. Decoder 28754925
+      // eval 20825664
+      // isolatedVM 1409704 (1801801)
+      // vm2 459585 (579150)
+      // docker 46710 (53.050)
+      // deno 472083 (533807)
+
+      while (Date.now() - startTime < 60000) {
+        if (counter % 1000 === 0) {
+          console.log(counter)
+        }
+        await decode(payload, 0)
+        counter++
       }
+
+      console.log(counter)
+    } else {
+      let startTime
+      let counter
+
+      init(decodeStringTypedArray, 0, timeout, memoryLimit, (response) => {
+        if (Date.now() - startTime < 60000) {
+          counter++
+          decode(payload, 0)
+
+          if (counter % 1000 === 0) {
+            console.log(counter)
+          }
+        } else {
+          console.log(counter)
+        }
+      })
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+
+      startTime = Date.now()
+      counter = 0
+
+      decode(payload, 0)
     }
   }
 }
@@ -141,4 +184,17 @@ async function main(d) {
 // main('eval')
 // main('vm2')
 // main('isolatedVM')
-main()
+
+if (argv.d) {
+  main()
+} else {
+  ;(async () => {
+    await main('static')
+    await main('common')
+    await main('eval')
+    await main('vm2')
+    await main('isolatedVM')
+    await main('docker')
+    await main('denoVM')
+  })()
+}
