@@ -43,6 +43,8 @@ async function main(d) {
   } else if (decoder === 'denoVM') {
     ;[init, decode] = denoTest
     payload = payloadString
+  } else {
+    throw new Error('No decoder selected')
   }
 
   if (benchmark === 'latency') {
@@ -91,25 +93,39 @@ async function main(d) {
       decode(payload, 0)
     }
   } else if (benchmark === 'memory') {
+    // total: 16000 mb
+    //
+    // 2000 clients
+    //
+    // vm2: 2.7 % = 432 mb               / 2000 = 0,216 mb
+    //
     // 1000 clients:
     //
-    // isolated-vm: 16.4 %
-    // vm2: 5 %
+    // isolated-vm: 7.9 % = 1264 mb      / 1000 = 1.264 mb
+    // vm2: 
     // eval: 0.7 %
     // static: 0.6 %
     //
+    // 1 client:
+    //
+    // deno-vm: 0.8% = 128mb
+    // docker: 23.5 mb
 
     let clients = []
     let runs = 0
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 2; i++) {
       init(decodeStringTypedArray, i, timeout, memoryLimit)
       clients.push(i)
     }
+    await new Promise((resolve) => setTimeout(resolve, 3000))
 
     while (true) {
-      await decode(payload, Math.floor(Math.random() * clients.length))
+      const clientId = Math.floor(Math.random() * clients.length)
+      await decode(payload, clientId)
       runs++
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
       if (runs % 1000) {
         console.log(runs)
