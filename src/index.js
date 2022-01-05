@@ -17,6 +17,7 @@ async function main(d) {
   const timeout = argv.t || 1000
   const memoryLimit = argv.m || 300
   const benchmark = argv.b || 'latency'
+  const client_count = argv.c || 1
 
   let init, decode, payload
 
@@ -112,7 +113,7 @@ async function main(d) {
     let clients = []
     let runs = 0
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < client_count; i++) {
       init(decodeStringTypedArray, i, timeout, memoryLimit, () => {})
       clients.push(i)
     }
@@ -176,14 +177,6 @@ async function main(d) {
     }
   }
 }
-
-// main()
-
-// main('static')
-// main('common')
-// main('eval')
-// main('vm2')
-// main('isolatedVM')
 
 if (argv.d) {
   main()
